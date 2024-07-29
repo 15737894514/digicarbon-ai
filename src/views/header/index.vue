@@ -16,14 +16,18 @@
         <i class="iconfont">&#xe61b;</i>
         <span>航运碳税服务</span>
       </div> -->
-      <el-link
+      <!-- <el-button></el-button> -->
+      <el-button @click="productManualClick" style="margin-right: 10px" plain type="primary" icon="el-icon-collection"
+        >产品手册</el-button
+      >
+      <!-- <el-link
         href="https://fbtlbah76l.feishu.cn/wiki/AVVowsD9Ui4sDVkBDlecb19Pnph?from=from_copylink"
         style="margin-right: 15px"
         :underline="false"
         type="primary"
         target="_blank"
         >产品手册</el-link
-      >
+      > -->
       <div class="account">
         <el-dropdown @command="handleCommand" v-if="isLogin">
           <div class="head-portrait">
@@ -38,7 +42,7 @@
           </el-dropdown-menu>
         </el-dropdown>
 
-        <el-button v-else type="primary" @click="login" plain>登录/注册</el-button>
+        <el-button v-else type="primary" icon="el-icon-s-custom" @click="login">登录/注册</el-button>
       </div>
     </div>
     <!-- 登录界面 -->
@@ -94,6 +98,7 @@ export default {
       // this.loginDiaShow = true;
       // this.reset();
       localStorage.setItem("accessToken", "");
+      localStorage.setItem("agentId", "");
       window.location.reload();
       // this.isLogin = false;
     });
@@ -108,6 +113,9 @@ export default {
     this.isLogin && this.getUserInfo(); //获取用户信息
   },
   methods: {
+    productManualClick() {
+      window.open("https://fbtlbah76l.feishu.cn/wiki/AVVowsD9Ui4sDVkBDlecb19Pnph?from=from_copylink");
+    },
     getUserInfo() {
       let accessToken = window.localStorage.getItem("accessToken");
       customerInfoApi({ accessToken }).then((res) => {
@@ -215,7 +223,7 @@ header {
   }
   .logo {
     // width: 150px;
-    height: 25px;
+    height: 32px;
     cursor: pointer;
     margin-top: 5px;
   }

@@ -23,6 +23,24 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.clamp2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 限制为两行 */
+  -webkit-box-orient: vertical;
+  overflow: hidden; /* 隐藏超出部分 */
+  text-overflow: ellipsis; /* 超出部分用省略号表示 */
+  white-space: normal; /* 允许换行 */
+  /* 你可能还想设置一些其他样式，比如宽度、字体大小等 */
+}
+.clamp3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* 限制为两行 */
+  -webkit-box-orient: vertical;
+  overflow: hidden; /* 隐藏超出部分 */
+  text-overflow: ellipsis; /* 超出部分用省略号表示 */
+  white-space: normal; /* 允许换行 */
+  /* 你可能还想设置一些其他样式，比如宽度、字体大小等 */
+}
 .center {
   display: flex;
   align-items: center;
@@ -97,4 +115,11 @@ div:focus {
     clear: both;
     height: 0;
   }
+}
+.sec-title {
+  color: #333;
+  font-size: 20px;
+  line-height: 20px;
+  font-weight: 600;
+  margin: 20px 0 15px 0;
 }

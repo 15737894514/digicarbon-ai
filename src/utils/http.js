@@ -80,6 +80,10 @@ http.interceptors.response.use(
       $vue.$EventBus.$emit("voidToken");
       return;
     }
+    //无效的agentId
+    if (data.data.code === 1003) {
+      localStorage.setItem("agentId", "");
+    }
     //响应出现问题
     if (data.data.code !== 0) {
       Message.warning({ message: data.data.msg });

@@ -5,8 +5,7 @@
     <div class="sec-contanier" v-else>
       <!-- 角色选择（知识库） -->
       <div class="nav-role">
-        <!-- <img @click="goHome" class="logo" :src="logo" alt="" /> -->
-        <div class="role-box">
+        <!-- <div class="role-box">
           <div
             :class="{ active: item.agentId === agentId }"
             class="role-list-box"
@@ -18,121 +17,122 @@
             <span :title="item.agentName" class="over-ellipsis">{{ item.agentName }}</span>
             <div v-if="item.agentId === agentId" class="role-active"></div>
           </div>
-          <!-- <el-dropdown size="medium" trigger="click" @command="roleSel" placement="bottom-start">
-            <div class="nav-role-box">
-              <img v-if="agentId" :src="`/imgs/${agentId}.jpg`" alt="" />
-              <span class="el-dropdown-link">
-                <div class="agent-title">
-                  <div class="agent-name over-ellipsis">{{ agentName }}</div>
-                  <i class="el-icon-arrow-right"></i>
-                </div>
-                <p>点击切换知识库</p>
-              </span>
-            </div>
-
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item
-                :class="{ active: item.agentId === agentId }"
-                :command="item.agentId"
-                v-for="(item, index) in roles"
-                :key="index"
-              >
-                <div class="role-list-box">
-                  <img v-if="agentId" :src="`/imgs/${item.agentId}.jpg`" alt="" />
-                  <span :title="item.agentName" class="over-ellipsis">{{ item.agentName }}</span>
-                  <div v-if="item.agentId === agentId" class="role-active"></div>
-                </div>
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown> -->
+        </div> -->
+        <div class="cur-role-box">
+          <div class="cur-role">
+            <img v-if="agentId" :src="`${selAgentData.agentVersionIcon}`" alt="" />
+            <el-tooltip
+              popper-class="agent-desc-tooltip"
+              effect="light"
+              :content="selAgentData.agentVersionName"
+              placement="top"
+            >
+              <!-- <div>{{ agent.agentVersionDesc }}</div> -->
+              <span class="over-ellipsis">{{ selAgentData.agentVersionName }}</span>
+            </el-tooltip>
+            <!-- <span :title="agentName" class="over-ellipsis">{{ selAgentData.agentVersionName }}</span> -->
+          </div>
+          <div class="sel-agent__btn">
+            <el-button size="mini" @click="changeRoleClick" type="primary"
+              ><i class="iconfont icon-qiehuan"></i>
+              <p>切换</p>
+            </el-button>
+          </div>
         </div>
         <!-- 话题列表 -->
         <div class="topic-list">
-          <!-- <el-button icon="el-icon-plus" plain round type="primary" @click="setUpTopic">新建对话</el-button> -->
-          <el-input class="search" clearable placeholder="搜索历史对话" @input="searchInput" suffix-icon="el-icon-search" v-model="searchVal">
+          <el-input
+            class="search"
+            clearable
+            placeholder="搜索历史对话"
+            @input="searchInput"
+            suffix-icon="el-icon-search"
+            v-model="searchVal"
+          >
           </el-input>
+          <div class="set-up-box" v-if="isLogin">
+            <el-button type="primary" @click="setUpTopic()" icon="el-icon-plus">新建对话</el-button>
+          </div>
           <div class="topic">
             <div class="title">
-              <div>话题列表 {{ topicLists.length + 1 }}</div>
-              <el-tooltip v-if="isLogin" class="item" effect="dark" content="新建对话" placement="top">
+              <!-- {{ topicLists.length + 1 }} -->
+              <div>话题列表</div>
+              <!-- <el-tooltip v-if="isLogin" class="item" effect="dark" content="新建对话" placement="top">
                 <el-button @click="setUpTopic()" size="mini" plain icon="el-icon-plus"></el-button>
-              </el-tooltip>
+              </el-tooltip> -->
             </div>
             <ul>
               <li :class="{ active: sessionId === config.sessionDefault }" @click="topicListSel()">
                 <i class="iconfont">&#xe710;</i>
                 <span>默认话题</span>
-                <span style="margin-left: 5px; padding: 1px 5px; color: #666666 !important; background: rgba(0, 0, 0, 0.06); border: 5px">临时</span>
+                <span class="short-time">临时</span>
               </li>
               <div v-if="isLogin">
                 <div v-show="topic.data.length > 0" v-for="(topic, i) in topicData" :key="i" :title="topic.title">
-                  <div style="text-align: left; color: rgba(0, 0, 0, 0.6); padding: 10px 0">
-                    {{ topic.title }}
-                  </div>
-                  <li v-for="(item, index) in topic.data" :class="{ active: sessionId === item.sessionId }" :key="index" @click="topicListSel(item)">
+                  <div class="topic-date-title">{{ topic.title }}</div>
+                  <li
+                    v-for="(item, index) in topic.data"
+                    :class="{ active: sessionId === item.sessionId }"
+                    :key="index"
+                    @click="topicListSel(item)"
+                  >
                     <div style="display: flex; align-items: center">
                       <i class="iconfont">&#xe61e;</i>
-                      <el-input style="width: 150px" v-if="item.rename" v-model="item.seesionName" @blur="renameBlur(item)"></el-input>
-                      <div :title="item.value" style="width: 140px" v-else class="over-ellipsis">
+                      <el-input
+                        style="width: 150px"
+                        v-if="item.rename"
+                        v-model="item.seesionName"
+                        @blur="renameBlur(item)"
+                      ></el-input>
+                      <div :title="item.value" style="width: 170px" v-else class="over-ellipsis">
                         {{ item.seesionName }}
                       </div>
                     </div>
                     <el-dropdown class="opt" @command="handleCommand">
                       <span class="el-dropdown-link"> <i class="el-icon-more"></i> </span>
                       <el-dropdown-menu slot="dropdown">
-                        <el-dropdown-item :command="{ command: 'rename', item: item }"><i class="el-icon-edit"></i>重命名</el-dropdown-item>
-                        <el-dropdown-item :command="{ command: 'delete', item: item }"><i class="el-icon-delete"></i>删除</el-dropdown-item>
+                        <el-dropdown-item :command="{ command: 'rename', item: item }"
+                          ><i class="el-icon-edit"></i>重命名</el-dropdown-item
+                        >
+                        <el-dropdown-item :command="{ command: 'delete', item: item }"
+                          ><i class="el-icon-delete"></i>删除</el-dropdown-item
+                        >
                       </el-dropdown-menu>
                     </el-dropdown>
                   </li>
                 </div>
               </div>
-              <!-- <el-collapse v-model="activeNames" v-if="isLogin">
-                <el-collapse-item v-show="topic.data.length > 0" v-for="(topic, i) in topicData" :key="i" :title="topic.title" :name="i">
-                  <li v-for="(item, index) in topic.data" :class="{ active: sessionId === item.sessionId }" :key="index" @click="topicListSel(item)">
-                    <div style="display: flex; align-items: center">
-                      <i class="iconfont">&#xe61e;</i>
-                      <el-input style="width: 150px" v-if="item.rename" v-model="item.seesionName" @blur="renameBlur(item)"></el-input>
-                      <div :title="item.value" style="width: 140px" v-else class="over-ellipsis">{{ item.seesionName }}</div>
-                    </div>
-                    <el-dropdown class="opt" @command="handleCommand">
-                      <span class="el-dropdown-link"> <i class="el-icon-more"></i> </span>
-                      <el-dropdown-menu slot="dropdown">
-                        <el-dropdown-item :command="{ command: 'rename', item: item }"><i class="el-icon-edit"></i>重命名</el-dropdown-item>
-                        <el-dropdown-item :command="{ command: 'delete', item: item }"><i class="el-icon-delete"></i>删除</el-dropdown-item>
-                      </el-dropdown-menu>
-                    </el-dropdown>
-                  </li>
-                </el-collapse-item>
-              </el-collapse> -->
-              <!-- <div v-for="(topic, i) in topicData" :key="i">
-                <p style="font-weight: 600; padding: 5px 0 2px 6px; text-align: left">{{ topic.title }}</p>
-                <li v-for="(item, index) in topicLists" :class="{ active: sessionId === item.sessionId }" :key="index" @click="topicListSel(item)">
-                  <div style="display: flex; align-items: center">
-                    <i class="iconfont">&#xe61e;</i>
-                    <el-input style="width: 150px" v-if="item.rename" v-model="item.seesionName" @blur="renameBlur(item)"></el-input>
-                    <div :title="item.value" style="width: 140px" v-else class="over-ellipsis">{{ item.seesionName }}</div>
-                  </div>
-                  <el-dropdown class="opt" @command="handleCommand">
-                    <span class="el-dropdown-link"> <i class="el-icon-more"></i> </span>
-                    <el-dropdown-menu slot="dropdown">
-                      <el-dropdown-item :command="{ command: 'rename', item: item }"><i class="el-icon-edit"></i>重命名</el-dropdown-item>
-                      <el-dropdown-item :command="{ command: 'delete', item: item }"><i class="el-icon-delete"></i>删除</el-dropdown-item>
-                    </el-dropdown-menu>
-                  </el-dropdown>
-                </li>
-              </div> -->
             </ul>
           </div>
         </div>
       </div>
       <!-- 角色简介 -->
-      <agentIntro @useRole="useRole" :agentName="agentName" :agentId="agentId" class="ai-intro" v-if="introShow"></agentIntro>
+      <!-- <agentIntro
+        @useRole="useRole"
+        :agentData="selAgentData"
+        :agentName="agentName"
+        :agentId="agentId"
+        class="ai-intro"
+        v-if="introShow"
+      ></agentIntro> -->
       <!-- AI对话 -->
-      <div v-else class="ai-contanier">
-        <digiAi ref="digiAi" @updateTopic="updateTopic" @createTopic="setUpTopic" :sessionId="sessionId" :agentName="agentName"></digiAi>
+      <div class="ai-contanier">
+        <digiAi
+          ref="digiAi"
+          @updateTopic="updateTopic"
+          @createTopic="setUpTopic"
+          :sessionId="sessionId"
+          :agentName="agentName"
+          :agentIcon="selAgentData.agentVersionIcon"
+          :agentChatDesc="selAgentData.agentVersionChatDesc"
+          :questions="selAgentData.agentVersionChatInfo"
+        ></digiAi>
       </div>
     </div>
+    <agentScene @closeDiaShow="diaShow = false" v-if="diaShow" :data="data" @chang="agentChange"></agentScene>
+    <!-- <el-dialog custom-class="agent-group" title="智能体中心" append-to-body :visible.sync="diaShow" width="80%">
+      <agentScene v-if="diaShow" :data="data" @chang="agentChange"></agentScene>
+    </el-dialog> -->
   </div>
 </template>
 
@@ -141,14 +141,20 @@ import secHeader from "views/header";
 import digiAi from "views/digiAi";
 import agentIntro from "views/digiHome/intro.vue";
 import digiSkeleton from "@/views/digiHome/digiSkeleton";
-import { agentListApi, sessionListApi, sessionAddApi, sessionUpdateApi, sessionDeleteApi } from "api";
+import agentScene from "./components/agentScene.vue";
+import { agentListApi, sessionListApi, sessionAddApi, sessionUpdateApi, sessionDeleteApi, agentListV1Api } from "api";
 import moment from "moment";
+import { agentIconPath } from "@/utils/config";
+let { NODE_ENV } = process.env;
 export default {
   name: "home",
   props: {},
-  components: { secHeader, digiAi, agentIntro, digiSkeleton },
+  components: { secHeader, digiAi, agentIntro, digiSkeleton, agentScene },
   data() {
     return {
+      data: {},
+      diaShow: false,
+      selAgentData: {},
       activeNames: [0, 1, 2, 3],
       introShow: false, //角色介绍
       topicData: [],
@@ -175,6 +181,35 @@ export default {
     });
   },
   methods: {
+    changeRoleClick() {
+      if (this.isPending()) return;
+      this.diaShow = true;
+    },
+    agentChange(selAgentData) {
+      this.diaShow = false;
+      //切换智能体和之前的智能体一样（不做操作）
+      console.log(selAgentData.agentId);
+      console.log(this.agentId);
+      if (selAgentData.agentId === this.agentId) return;
+      //未登录 先清空对话数据
+      if (!this.utils.isLogin()) {
+        this.$refs.digiAi.setEmptyData();
+      }
+      this.selAgentData = selAgentData;
+      this.agentId = selAgentData.agentId;
+      // this.isShowIntro();
+      this.sessionId = this.getSessionId();
+      let agentName = selAgentData.agentVersionName;
+      this.agentName = agentName;
+
+      this.$store.commit("setAgentId", this.agentId);
+      this.$store.commit("setAgentName", this.agentName);
+      window.localStorage.setItem("agentId", this.agentId);
+      this.message.success({ message: `已切换到「 ${agentName} 」` });
+
+      // this.$router.push({ path: "/ai", query: { agentId: this.agentId } });
+      this.utils.isLogin() && this.sessionListByRole("changeRole");
+    },
     //点击使用角色
     useRole() {
       this.introShow = false;
@@ -215,36 +250,55 @@ export default {
       await this.getRoles(); //获取角色数据
       //登录后才有会话列表
       let accessToken = localStorage.getItem("accessToken");
-      if (accessToken) {
-        this.sessionListByRole(); //获取角色会话列表
-        this.isShowIntro(); //未登录
-      } else {
-        this.isShowIntro(); //未登录
-      }
-    },
-    filterRoleByEnv(agentList) {
-      let { VUE_APP_ENV } = process.env;
-      //todo 正式环境去除「涌现知识库」
-      return agentList?.filter((item) => (VUE_APP_ENV === "cn-pre" ? item : item.agentId !== "AGENT-202403181348"));
+      accessToken && this.agentId && this.sessionListByRole(); //获取角色会话列表
+      // if (accessToken) {
+      //   this.agentId && this.sessionListByRole(); //获取角色会话列表
+      //   this.isShowIntro(); //未登录
+      // } else {
+      //   this.isShowIntro(); //未登录
+      // }
     },
     //获取角色（知识库）
     async getRoles() {
-      await agentListApi(this.utils.getComParams()).then((res) => {
-        let agentList = res.data.agentList;
-        // this.roles = this.filterRoleByEnv(agentList);
-        this.roles = agentList;
-        let agentId = localStorage.getItem("agentId");
-        this.agentId = agentId ? agentId : this.roles[0].agentId;
-        this.agentName = this.roles.find((item) => item.agentId === this.agentId)?.agentName;
-        this.$store.state.roles = this.roles;
-        this.$store.state.agentId = this.agentId;
-        this.sessionId = this.getSessionId();
+      let env = NODE_ENV === "cn" ? "prod" : "pre";
+      await agentListV1Api({ ...this.utils.getComParams(), env }).then((res) => {
+        console.log(res);
+        this.data = res.data;
+        let { data, agentGroup } = this.data;
+        if (data?.length > 0) {
+          data.forEach((item) => {
+            item.agentVersionIcon = `${agentIconPath[NODE_ENV]}${item.agentVersionIcon}`;
+          });
+          let urlAgentId = this.$route.query.agentId;
 
-        this.$store.commit("setRoles", this.roles);
-        this.$store.commit("setAgentId", this.agentId);
-        this.$store.commit("setAgentName", this.agentName);
-        // this.$router.push({ path: "/ai", query: { agentId: this.agentId } });
+          let agentId = urlAgentId || localStorage.getItem("agentId");
+          console.log("[ agentId ] >", agentId);
+          this.agentId = agentId ? agentId : data[0].agentId;
+          let selAgentData = data.find((item) => item.agentId === this.agentId);
+          this.selAgentData = selAgentData ? selAgentData : data[0];
+          this.agentName = this.selAgentData.agentVersionName;
+          this.sessionId = this.getSessionId();
+
+          this.$store.commit("setAgentId", this.agentId);
+          this.$store.commit("setAgentName", this.agentName);
+        }
       });
+      // await agentListApi(this.utils.getComParams()).then((res) => {
+      //   let agentList = res.data.agentList;
+      //   // this.roles = this.filterRoleByEnv(agentList);
+      //   this.roles = agentList;
+      //   let agentId = localStorage.getItem("agentId");
+      //   this.agentId = agentId ? agentId : this.roles[0].agentId;
+      //   this.agentName = this.roles.find((item) => item.agentId === this.agentId)?.agentName;
+      //   this.$store.state.roles = this.roles;
+      //   this.$store.state.agentId = this.agentId;
+      //   this.sessionId = this.getSessionId();
+
+      //   this.$store.commit("setRoles", this.roles);
+      //   this.$store.commit("setAgentId", this.agentId);
+      //   this.$store.commit("setAgentName", this.agentName);
+      //   // this.$router.push({ path: "/ai", query: { agentId: this.agentId } });
+      // });
     },
     //通过角色获取会话列表
     sessionListByRole(type) {
@@ -252,7 +306,9 @@ export default {
         this.topicLists = res.data.sessionList;
 
         if (this.topicLists.length === 0) {
-          this.sessionId = type == "changeRole" ? "" : this.config.sessionDefault;
+          this.$refs.digiAi.setEmptyData();
+          this.sessionId = this.config.sessionDefault;
+          // this.sessionId = type == "changeRole" ? "" : this.config.sessionDefault;
         } else {
           //默认选择第一个
           if (["create", "delete"].includes(type)) {
@@ -339,9 +395,11 @@ export default {
       if (this.isPending()) return;
       console.log("status", this.$refs.digiAi);
       this.newQuestion = value || ""; //通过他决定新建对话并且直接发送问答
-      sessionAddApi({ ...this.utils.getComParams(), agentId: this.agentId, sessionName: value || "默认话题" }).then((res) => {
-        this.sessionListByRole("create");
-      });
+      sessionAddApi({ ...this.utils.getComParams(), agentId: this.agentId, sessionName: value || "默认话题" }).then(
+        (res) => {
+          this.sessionListByRole("create");
+        }
+      );
     },
     //重命名
     renameBlur(item) {
@@ -390,6 +448,12 @@ export default {
 //@import url(); 引入公共css类
 $roleHeight: 80px;
 $roleImgWidth: 50px;
+.set-up-box {
+  margin: 10px 0;
+  .el-button {
+    width: 100%;
+  }
+}
 .logo {
   // width: 150px;
   // width: 30px;
@@ -406,7 +470,7 @@ $roleImgWidth: 50px;
   display: flex;
 }
 .el-dropdown-menu {
-  width: 180px;
+  width: 100px;
 }
 .el-dropdown-menu__item.active {
   background: rgb(235, 244, 239);
@@ -451,7 +515,16 @@ $roleImgWidth: 50px;
 .nav-role::-webkit-scrollbar {
   display: none;
 }
+.short-time {
+  margin-left: 5px;
+  padding: 1px 5px;
+  color: var(--topicShortTimeColor) !important;
+  background: var(--topicShortTimeBg);
+
+  border: 5px;
+}
 .nav-role {
+  flex: none;
   padding: 0 10px;
   width: $navWidth;
   min-width: 200px;
@@ -461,6 +534,8 @@ $roleImgWidth: 50px;
   text-align: left;
   overflow: auto;
   padding-top: 5px;
+  background: var(--asideBg);
+  color: var(--asideColor);
   .role-box {
     // padding-top: 10px;
     // height: $roleHeight;
@@ -513,13 +588,20 @@ $roleImgWidth: 50px;
   overflow: auto;
   .search {
     margin-top: 10px;
+    ::v-deep .el-input__inner {
+      background-color: var(--asideSearchBg);
+      border: var(--asideSearchBorder);
+      color: var(--asideSearchColor);
+      transition: inherit;
+    }
   }
   .topic {
+    color: var(--topicColor);
     .title {
       padding: 14px 0;
       text-align: left;
-      box-shadow: 0 2px 6px #f8f8f8;
-      color: #080808;
+      // box-shadow: 0 2px 6px #f8f8f8;
+      color: var(--topicTitleColor);
       font-size: 14px;
       display: flex;
       justify-content: space-between;
@@ -538,7 +620,7 @@ $roleImgWidth: 50px;
         //   background: rgba(0, 0, 0, 0.12);
         // }
         &.active {
-          background: rgba(0, 0, 0, 0.06);
+          background: var(--topicListActiveBg);
         }
         -webkit-transition: background 200ms cubic-bezier(0.215, 0.61, 0.355, 1);
         transition: background 200ms cubic-bezier(0.215, 0.61, 0.355, 1);
@@ -548,6 +630,7 @@ $roleImgWidth: 50px;
 
         i {
           margin-right: 5px;
+          color: var(--topicColor);
         }
         .opt {
           position: absolute;
@@ -564,5 +647,50 @@ $roleImgWidth: 50px;
   flex: 1;
   position: relative;
   padding-top: $headerHeight;
+}
+.cur-role-box {
+  margin-top: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  // height: 40px;
+  font-size: 14px;
+  .cur-role {
+    display: flex;
+    align-items: center;
+    span {
+      width: 120px;
+    }
+  }
+  .sel-agent__btn {
+    .el-button {
+      ::v-deep span {
+        display: flex;
+        align-items: center;
+        p {
+          font-size: 13px;
+        }
+        i {
+          margin-right: 4px;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+  img {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    margin-right: 5px;
+  }
+}
+::v-deep .agent-group {
+  background: #f8f8f8;
+}
+.topic-date-title {
+  text-align: left;
+  color: var(--topicDateTitleColor);
+  padding: 10px 0;
+  // font-weight: 600;
 }
 </style>

@@ -18,7 +18,7 @@
             <div v-if="item.role === 'user'" class="ask-content content">
               <img :src="userData.picUrl ? userData.picUrl : '/logo.png'" alt="" />
               <div class="chat-value-box">
-                <div class="chat-value">{{ item.message }}</div>
+                <div class="chat-value">{{ item.content }}</div>
               </div>
               <div class="opt-box">
                 <el-tooltip effect="dark" content="复制" placement="top">
@@ -37,9 +37,9 @@
               <img :src="agentId ? agentIcon : '/robot.webp'" alt="" />
               <div class="ai-value-box">
                 <div class="chat-value">
-                  <digiLoading v-if="status === 'pending' && !item.message && index === data.length - 1"></digiLoading>
-                  <span class="ai-md-con" v-html="compiledMarkdown(item.message)" v-if="item.message"></span>
-                  <!-- <span class="sign" v-if="status === 'pending' && item.message"></span> -->
+                  <digiLoading v-if="status === 'pending' && !item.content && index === data.length - 1"></digiLoading>
+                  <span class="ai-md-con" v-html="compiledMarkdown(item.content)" v-if="item.content"></span>
+                  <!-- <span class="sign" v-if="status === 'pending' && item.content"></span> -->
                   <div class="opt-box">
                     <el-tooltip effect="dark" content="复制" placement="top">
                       <el-button
@@ -50,7 +50,7 @@
                         icon="el-icon-copy-document"
                       ></el-button>
                     </el-tooltip>
-                    <el-tooltip effect="dark" content="重新生成" placement="top">
+                    <el-tooltip v-if="item.sendCode" effect="dark" content="重新生成" placement="top">
                       <el-button
                         @click="rebuild(item, index)"
                         size="mini"
@@ -172,6 +172,7 @@ export default {
       data: [],
       status: "",
       sendType: 0, // 0/1 1代表重新生成
+      sendCode: "", //重新生成需要的
       createTopic: false, //在默认话题界面又要新建对话的时候为true
       isLogin: false,
       surplusUseCount: 0,
@@ -211,17 +212,18 @@ export default {
       });
     },
     copyActive(e, item) {
-      this.utils.handleClipboard(e, item.message);
+      this.utils.handleClipboard(e, item.content);
     },
     rebuild(item, index) {
       this.sendType = 1;
+      this.sendCode = item.sendCode;
       // let questionItem = this.data[index - 1];
       let question = "";
       //获取问的内容 递归获取（由于生成多次ai回答的情况）
       let getQuestion = () => {
         let questionItem = this.data[index - 1];
         if (questionItem.role === "user") {
-          question = questionItem.message;
+          question = questionItem.content;
         } else {
           index--;
           getQuestion();
@@ -235,25 +237,23 @@ export default {
       if (event.key === "Shift") {
         this.isShiftPressed = true;
       }
-      //防止enter时有换行的效果
-      if (event.key === "Enter" && !this.isShiftPressed) {
-        event.preventDefault(); // 阻止默认的换行行为
-      }
     },
     handleKeyUp(event) {
-      //先判断 是否是按下了shift+enter
-      if (event.key === "Enter" && this.isShiftPressed) return;
       // 判断shift键是否释放
       // console.log(event.key);
       // console.log("this.isShiftPressed", this.isShiftPressed);
       // 判断是否按下了Enter键
-      // console.log("[ this.isShiftPressed ] >", this.isShiftPressed);
-      if (event.key === "Enter") {
+      if (event.key === "Enter" && !this.isShiftPressed) {
         // 发送消息的逻辑
-        //解决光标在文字中间按下回车（会换行的问题）（在按下enter键的时候 阻止默认时间就可以了）
-        // this.lineBreakByTextCenterEnter();
-        this.sendClick();
         // event.preventDefault(); // 阻止默认的换行行为
+        //解决光标在文字中间按下回车（会换行的问题）
+        this.lineBreakByTextCenterEnter();
+
+        this.sendClick();
+      } else if (event.key === "Enter" && this.isShiftPressed) {
+        // event.cancelBubble = true; //ie阻止冒泡行为
+        // event.stopPropagation(); //Firefox阻止冒泡行为
+        // event.preventDefault(); //取消事件的默认动作*换行
       }
       this.isShiftPressed = false;
     },
@@ -278,14 +278,8 @@ export default {
       this.sendClick();
     },
     stopClick() {
-      this.source.close();
-      this.status = "done";
       this.isShowEnd = false;
-      this.question = "";
-      this.sendType = 0;
-      this.createTopic = false;
-      this.setRandomQuestion();
-      this.questionShow = true;
+      sessionKillApi({ qid: this.qid, ...this.utils.getComParams() });
     },
     sendClick(question) {
       //没登录，但是使用了10次，引导去登录
@@ -315,21 +309,55 @@ export default {
       }
       this.value = ""; //清除value值
 
-      let obj = { message: this.question, role: "user" };
-      let aiCon = { role: "assistant", message: "" };
-      this.aiCon = aiCon;
+      let obj = { content: this.question, role: "user" };
       //不是重新生成的时候
       if (!question) {
         this.data.push(obj);
-        this.data.push(aiCon);
       } else if (this.createTopic) {
         //在默认话题（临时）创建的话题列表 第一次问的时候
         this.data.push(obj);
-        this.data.push(aiCon);
       }
+
+      this.qid = `qid-${this.utils.uuid()}`; //每一次的问是一个qid。为了长轮询 后端知道这是一个问题（好做话题记录）
       this.$nextTick(() => {
         this.getAiContent(true);
-        this.scrollToBottom(); //内容多的时候自动给你滚动到底部
+      });
+    },
+    //获取ai大模型的数据
+    getAiContent(first) {
+      let agentId = this.$store.state.agentId;
+      sessionSendV2Api({
+        ...this.utils.getComParams(),
+        agentId,
+        sessionId: this.sessionId,
+        question: this.question,
+        sendType: this.sendType, // 0/1 发送/重新生成
+        sendCode: this.sendCode,
+        qid: this.qid,
+      }).then((res) => {
+        let { status, content, sendCode } = res.data;
+        content = content.replace(/^\s+|\s+$/g, ""); //去掉首位空格
+        this.status = status;
+        let aiCon = { role: "asistant", content, sendCode };
+        //ai 回答完成
+        if (status === "done") {
+          this.setAiContent(first, aiCon);
+          this.question = "";
+          cancelAnimationFrame(this.timer);
+          this.sendCode = "";
+          this.sendType = 0;
+          this.createTopic = false;
+          this.isShowEnd = false;
+          !this.utils.isLogin() && this.setUseCount(); //使用的次数
+          this.setRandomQuestion();
+          this.questionShow = true;
+        } else {
+          //正在进行中
+          this.setAiContent(first, aiCon);
+          this.timer = requestAnimationFrame(() => {
+            this.getAiContent();
+          });
+        }
       });
     },
     getSSEParams() {
@@ -340,7 +368,9 @@ export default {
         sessionId: this.sessionId,
         question: this.question,
         sendType: this.sendType, // 0/1 发送/重新生成
-        history: this.data.slice(0, -2),
+        history: this.data,
+        // sendCode: this.sendCode,
+        // qid: this.qid,
       };
       //转数据为json字符串
       var jsondata = JSON.stringify(data);
@@ -348,7 +378,6 @@ export default {
     },
     //获取ai大模型的数据
     getAiContent() {
-      this.status = "pending";
       let source = new SSE(`${sseHost[NODE_ENV]}/api/llm/stream`, {
         headers: { "Content-Type": "application/json" },
         payload: this.getSSEParams(),
@@ -366,23 +395,26 @@ export default {
         console.log("收到数据 event", e);
         let data = e.data;
         if (!data) return;
-        let aiData = JSON.parse(data);
-        console.log("[ aiData ] >", aiData);
-        let message = aiData.content;
-        let status = aiData["finish_reason"] || aiData["finish reason"];
-        this.status = ["Error", "Stop"].includes(status) ? "done" : "pending";
-        // if (this.status == "Error") return;
-        this.aiCon.message += message;
+        let { status, chuckValue, chunkValue, chunkName } = JSON.parse(data);
+        // chuckValue = chuckValue.replace(/^\s+|\s+$/g, ""); //去掉首位空格
+        this.status = status;
+        // console.log(content, content);
+        // let docs = "";
+        if (chunkName === "docs") {
+          this.aiCon.docs_content += `${chunkValue}`;
+        } else {
+          this.aiCon.content += chunkValue;
+        }
+
+        // let aiCon = { roleType: "assistant", answer: this.aiContent, docs };
         //ai 回答完成
-        if (this.status === "done") {
+        if (status === "done") {
           this.setAiContent(this.aiCon);
           this.question = "";
-          this.sendType = 0;
+          this.aiContent = "";
           this.createTopic = false;
           this.isShowEnd = false;
-          !this.utils.isLogin() && this.setUseCount(); //使用的次数
-          this.setRandomQuestion();
-          this.questionShow = true;
+          this.questionScene(); //对话界面 问题场景逻辑
         } else {
           //正在进行中
           this.setAiContent(this.aiCon);
@@ -412,8 +444,12 @@ export default {
       localStorage.setItem("useCount", useCount);
       this.getSurplusUseCount();
     },
-    setAiContent(aiCon) {
-      this.data.splice(this.data.length - 1, 1, aiCon);
+    setAiContent(first, aiCon) {
+      if (first) {
+        this.data.push(aiCon);
+      } else {
+        this.data.splice(this.data.length - 1, 1, aiCon);
+      }
       this.scrollToBottom(); //内容多的时候自动给你滚动到底部
     },
     scrollToBottom() {
@@ -479,7 +515,7 @@ $mainWidth: 800px;
 }
 .ai-chat-container {
   position: relative;
-  height: calc(100% - 120px);
+  height: calc(100% - 100px);
   padding: 5px 100px 20px 100px;
   overflow: auto;
   .ai-chat-main {
@@ -652,24 +688,8 @@ $mainWidth: 800px;
       ::v-deep ul {
         padding-left: 18px;
       }
-      ::v-deep pre {
-        overflow-x: auto;
-      }
-      ::v-deep textarea {
-        width: 100%;
-        // height: auto;
-        // border: none;
-        // background: none;
-      }
-      ::v-deep textarea:focus-visible {
-        border: none;
-      }
       ::v-deep a {
         color: $themeColor;
-      }
-      ::v-deep code {
-        // word-break: break-all;
-        white-space: break-spaces;
       }
       .opt-box {
         position: absolute;

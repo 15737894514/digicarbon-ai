@@ -3,6 +3,10 @@ import App from "./App.vue";
 import router from "./router";
 import store from "./store";
 import ElementUI from "element-ui";
+//设置主题
+import { setTheme } from "@/themes";
+setTheme();
+
 import "@/styles/index.scss";
 import { config } from "./config";
 Vue.prototype.config = config;
@@ -27,6 +31,7 @@ Vue.prototype.$EventBus = new Vue();
 Vue.use(ElementUI, { size: "small", zIndex: 3000 });
 
 Vue.config.productionTip = false;
+console.log(`${getHost[process.env["VUE_APP_ENV"]]}${location.search}`);
 router.beforeEach((to, from, next) => {
   if (
     /AppleWebKit.*Mobile/i.test(navigator.userAgent) ||
@@ -37,7 +42,7 @@ router.beforeEach((to, from, next) => {
     if (window.location.href.indexOf("?mobile") < 0) {
       try {
         if (/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) {
-          window.location.href = getHost[process.env["VUE_APP_ENV"]];
+          window.location.href = `${getHost[process.env["VUE_APP_ENV"]]}${location.search}`;
           return;
         } else {
           next();

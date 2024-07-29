@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "build:cn-pre": "vue-cli-service build --mode cn-pre",
+    "build": "cross-env NODE_ENV=cn vue-cli-service build",
+    "build:cn-pre": "cross-env NODE_ENV=cn-pre vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
@@ -13,6 +13,7 @@
     "clipboard": "^2.0.11",
     "core-js": "^3.8.3",
     "element-ui": "2.15.13",
+    "highlight.js": "^11.10.0",
     "marked": "^3.0.0",
     "moment": "^2.29.4",
     "node-polyfill-webpack-plugin": "^3.0.0",
@@ -40,7 +41,7 @@
     "serve-static": "1.13.2",
     "svg-sprite-loader": "4.1.3",
     "svgo": "1.2.2",
-    "terser-webpack-plugin": "^4.2.3",
+    "terser-webpack-plugin": "^5.3.10",
     "vue-template-compiler": "^2.6.14"
   }
 }

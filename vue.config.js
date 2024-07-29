@@ -14,10 +14,10 @@ function resolve(dir) {
 module.exports = defineConfig({
   transpileDependencies: true,
   lintOnSave: false,
-  productionSourceMap: process.env.NODE_ENV === "development",
+  productionSourceMap: process.env.NODE_ENV === "development" ? true : false,
   devServer: {
     hot: true, //开启热更新
-    port: "8000",
+    port: "8100",
     open: true,
     client: {
       overlay: false,
@@ -40,7 +40,7 @@ module.exports = defineConfig({
     // it can be accessed in index.html to inject the correct title.
     name: "digicarbon",
     // optimization: { usedExports: true },
-    mode: NODE_ENV, //只有是production环境时，TerserPlugin或者UglifyjsWebpackPlugin 插件才能生效
+    mode: NODE_ENV === "development" ? "development" : "production", //只有是production环境时，TerserPlugin或者UglifyjsWebpackPlugin 插件才能生效
     devtool: NODE_ENV === "development" ? "source-map" : undefined,
     resolve: {
       alias: {
@@ -55,6 +55,7 @@ module.exports = defineConfig({
     },
     optimization: {
       // 此处添加 移除console.log 和 debugger的代码
+      minimize: true,
       minimizer: [
         //这个插件使用terser来缩小你的JavaScript
         new TerserPlugin({
@@ -65,6 +66,10 @@ module.exports = defineConfig({
             compress: {
               drop_console: true, // 清除 console 语句
               drop_debugger: false, // 清除 debugger 语句
+              pure_funcs: ["console.log"], // 去除console.log
+            },
+            output: {
+              comments: true, // 去除注释
             },
           },
         }),

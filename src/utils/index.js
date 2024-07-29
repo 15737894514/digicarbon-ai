@@ -6,6 +6,11 @@ import { config } from "@/config.js";
 import { customerInfoApi } from "api";
 import store from "@/store/index";
 import agentData from "@/utils/model";
+
+//是否是一个合法的链接;
+export function isValidURL(url) {
+  return /^https?:\/\//.test(url);
+}
 //是否登录
 export function isLogin() {
   return window.localStorage.getItem("accessToken") ? true : false;
@@ -94,8 +99,8 @@ export function initUseCount() {
     }
   }, 1000);
 }
+let timestamp = new Date().valueOf();
 export function getComParams() {
-  let timestamp = new Date().valueOf();
   let accessToken = localStorage.getItem("accessToken") || `DIGI-${timestamp}`;
   let sid = createToSign(accessToken, "DigiCarbonAI", timestamp);
   return {
@@ -123,11 +128,13 @@ export function uuid(length = 8, chars) {
   return result;
 }
 //获取问答的推荐问题
-export function getRandomQuestion(agentId, count) {
+export function getRandomQuestion(questions, count) {
   // 创建一个空数组存放随机选取的元素
+  if (!questions || questions.length == 0) return [];
+  if (questions.length == 1 && !questions[0]) return [];
   var randomArr = [];
-  if (!agentData[agentId]?.questions) return [];
-  let questions = agentData[agentId].questions;
+  // if (!agentData[agentId]?.questions) return [];
+  // let questions = agentData[agentId].questions;
   while (randomArr.length < count) {
     // 生成一个介于0到arr.length-1之间的随机索引值
     var index = Math.floor(Math.random() * questions.length);
